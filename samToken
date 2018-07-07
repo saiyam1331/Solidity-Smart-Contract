@@ -1,0 +1,76 @@
+# Solidity-Smart-Contract
+pragma solidity ^0.4.20;
+
+contract SAMToken {
+
+   
+     mapping (address => uint) balances;
+    address tokenFundsAddress;
+    address beneficiary;
+    uint amountRaised;
+    uint constant private TOKEN_PRICE_IN_WEI = 1 * 1 ether;
+    event TransferGB(address indexed from, address indexed to, uint value);
+    event FundsRaised(address indexed from, uint fundsReceivedInWei, uint tokensIssued);
+    event ETHFundsWithdrawn(address indexed recipient, uint fundsWithdrawnInWei);
+    
+
+    constructor(uint initialSupply) public {
+        
+        balances[msg.sender] = initialSupply;
+        
+       
+        tokenFundsAddress = msg.sender;
+        
+       
+        beneficiary = tokenFundsAddress;
+    }
+    
+   
+    function sendTokens(address receiver, uint amount) public {
+        // if sender does not have enough money
+        if (balances[msg.sender] < amount) return;
+        
+        // take funds out of sender's account
+        balances[msg.sender] -= amount;
+        
+        // add those funds to receipient's account
+        balances[receiver] += amount;
+
+        emit TransferGB(msg.sender, receiver, amount);
+    }
+    
+    function getBalance(address addr) public view returns (uint) {
+        return balances[addr];
+    }
+
+    function buyTokensWithEther() public payable {
+      
+        // calculate # of tokens to give based on 
+        // amount of Ether received and the token's fixed price
+        uint numTokens = msg.value / TOKEN_PRICE_IN_WEI;
+        
+        // take funds out of our token holdings
+        balances[tokenFundsAddress] -= numTokens;
+        
+        // deposit those tokens into the buyer's account
+        balances[msg.sender] += numTokens;
+        
+        // update our tracker of total ETH raised
+        // during this crowdsale
+        amountRaised += msg.value;
+
+        emit FundsRaised(msg.sender, msg.value, numTokens);
+    }
+    
+    function withdrawRaisedFunds() public {
+        
+           if (msg.sender != beneficiary)
+            return;
+            if (msg.sender != beneficiary)
+            return;
+          beneficiary.transfer(amountRaised);
+           
+         emit ETHFundsWithdrawn(beneficiary, amountRaised); 
+        }
+      
+}
